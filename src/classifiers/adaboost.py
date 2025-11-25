@@ -99,9 +99,10 @@ class AdaBoostClassifier:
         return f"AdaBoostClassifier(n_weak={len(self.weak_classifiers)}, threshold={self.threshold:.3f})"
 
 
-def train_adaboost(feature_response_matrix, labels, features, T=50, verbose=True):
+def train_adaboost(feature_response_matrix, labels, features, T=50,
+                   validation_data=None, verbose=True):
     """
-    Train AdaBoost classifier
+    Train AdaBoost classifier with optional validation tracking
 
     Algorithm from Viola-Jones paper Table 1:
     1. Initialize weights: w_1,i = 1/(2m) for negatives, 1/(2l) for positives
@@ -117,10 +118,13 @@ def train_adaboost(feature_response_matrix, labels, features, T=50, verbose=True
         labels: (N,) ground truth labels (0/1)
         features: List of HaarFeature objects
         T: Number of weak classifiers to select
+        validation_data: Tuple of (val_responses, val_labels) for tracking (optional)
         verbose: Print progress
 
     Returns:
-        AdaBoostClassifier
+        If validation_data is None: AdaBoostClassifier
+        If validation_data provided: Tuple of (AdaBoostClassifier, history)
+            where history = {'train_acc': [...], 'val_acc': [...]}
     """
     N = len(labels)
     m = np.sum(labels == 0)  # Number of negatives
@@ -145,6 +149,14 @@ def train_adaboost(feature_response_matrix, labels, features, T=50, verbose=True
     # Storage for selected classifiers
     weak_classifiers = []
     alphas = []
+
+    # History tracking for validation
+    history = None
+    if validation_data is not None:
+        val_responses, val_labels = validation_data
+        history = {'train_acc': [], 'val_acc': []}
+        if verbose:
+            print(f"  Validation set: {len(val_labels)} samples")
 
     # Training loop
     for t in range(T):
@@ -205,8 +217,10 @@ def train_adaboost(feature_response_matrix, labels, features, T=50, verbose=True
         weak_classifiers.append(weak_clf)
         alphas.append(alpha)
 
-        # Evaluate on training set
-        if verbose and (t + 1) % 10 == 0:
+        # Track accuracy history (every round if validation, every 10 rounds otherwise)
+        should_evaluate = (validation_data is not None) or ((t + 1) % 10 == 0)
+
+        if should_evaluate:
             # Temporary classifier to evaluate
             temp_clf = AdaBoostClassifier()
             temp_clf.weak_classifiers = weak_classifiers
@@ -215,7 +229,20 @@ def train_adaboost(feature_response_matrix, labels, features, T=50, verbose=True
 
             train_preds = temp_clf.predict(feature_response_matrix)
             train_acc = np.mean(train_preds == labels)
-            print(f"  Training accuracy: {train_acc:.2%}")
+
+            if validation_data is not None:
+                # Evaluate on validation set
+                val_preds = temp_clf.predict(val_responses)
+                val_acc = np.mean(val_preds == val_labels)
+
+                history['train_acc'].append(train_acc)
+                history['val_acc'].append(val_acc)
+
+                if verbose and (t + 1) % 10 == 0:
+                    print(f"  Train acc: {train_acc:.2%}  |  Val acc: {val_acc:.2%}")
+            else:
+                if verbose:
+                    print(f"  Training accuracy: {train_acc:.2%}")
 
     # Create final classifier
     classifier = AdaBoostClassifier()
@@ -228,9 +255,19 @@ def train_adaboost(feature_response_matrix, labels, features, T=50, verbose=True
         print("AdaBoost Training Complete!")
         print(f"  Selected {len(weak_classifiers)} weak classifiers")
         print(f"  Total alpha: {sum(alphas):.4f}")
+
+        if validation_data is not None:
+            best_val_idx = np.argmax(history['val_acc'])
+            best_val_acc = history['val_acc'][best_val_idx]
+            print(f"  Best validation accuracy: {best_val_acc:.2%} at round {best_val_idx+1}")
+
         print("=" * 60)
 
-    return classifier
+    # Return classifier with history if validation was used
+    if validation_data is not None:
+        return classifier, history
+    else:
+        return classifier
 
 
 def evaluate_classifier(classifier, feature_response_matrix, labels, verbose=True):

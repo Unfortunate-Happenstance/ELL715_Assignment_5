@@ -333,6 +333,7 @@ def evaluate_cascade(cascade, feature_response_matrix, labels, verbose=True):
 
     Returns:
         metrics: Dict with performance metrics
+        stage_stats: List of dicts with per-stage statistics
     """
     predictions, stage_info = cascade.predict(
         feature_response_matrix,
@@ -359,9 +360,49 @@ def evaluate_cascade(cascade, feature_response_matrix, labels, verbose=True):
         'tp': tp,
         'fp': fp,
         'tn': tn,
-        'fn': fn,
-        'stage_info': stage_info
+        'fn': fn
     }
+
+    # Compute detailed stage statistics
+    stage_stats = []
+    active_mask = np.ones(len(labels), dtype=bool)
+    
+    for i, stage in enumerate(cascade.stages):
+        if not np.any(active_mask):
+            break
+
+        active_indices = np.where(active_mask)[0]
+        active_labels = labels[active_indices]
+        active_responses = feature_response_matrix[active_indices]
+        
+        stage_predictions = stage.predict(active_responses)
+        
+        # Count faces and nonfaces at input
+        faces_in = np.sum(active_labels == 1)
+        nonfaces_in = np.sum(active_labels == 0)
+        
+        # Count what passes and gets rejected
+        passed_mask = stage_predictions == 1
+        rejected_mask = stage_predictions == 0
+        
+        faces_passed = np.sum((active_labels == 1) & passed_mask)
+        nonfaces_passed = np.sum((active_labels == 0) & passed_mask)
+        faces_rejected = np.sum((active_labels == 1) & rejected_mask)
+        nonfaces_rejected = np.sum((active_labels == 0) & rejected_mask)
+        
+        stage_stat = {
+            'faces_in': faces_in,
+            'nonfaces_in': nonfaces_in,
+            'faces_passed': faces_passed,
+            'nonfaces_passed': nonfaces_passed,
+            'faces_rejected': faces_rejected,
+            'nonfaces_rejected': nonfaces_rejected
+        }
+        stage_stats.append(stage_stat)
+        
+        # Update active mask
+        rejected_indices = active_indices[rejected_mask]
+        active_mask[rejected_indices] = False
 
     if verbose:
         print("\n" + "=" * 60)
@@ -386,7 +427,7 @@ def evaluate_cascade(cascade, feature_response_matrix, labels, verbose=True):
 
         print("=" * 60)
 
-    return metrics
+    return metrics, stage_stats
 
 
 # Main execution for testing
