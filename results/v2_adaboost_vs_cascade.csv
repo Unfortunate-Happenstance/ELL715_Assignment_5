@@ -1,0 +1,9 @@
+Metric,V2 AdaBoost (T=200),V2 Cascade (3-stage)
+Accuracy,92.11%,91.46%
+Precision,77.00%,76.49%
+Recall,75.09%,70.40%
+F1 Score,76.03%,73.32%
+True Positives,1697,1591
+False Positives,507,489
+True Negatives,10793,10811
+False Negatives,563,669
