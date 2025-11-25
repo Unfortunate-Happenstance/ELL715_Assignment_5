@@ -1,2 +1,42 @@
 # MacOS files
 .DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+ENV/
+env/
+
+# Jupyter
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Claude Code
+.claude/
+
+# Project specific
+.python-version
+
+# Data files (large binaries)
+data/processed/*.npy
+data/processed/*.pkl
+data/models/*.pkl
+
+# Keep directory structure
+!data/processed/.gitkeep
+!data/models/.gitkeep
+
+# Results (keep figures, ignore large outputs)
+results/*.npy
+results/*.pkl
