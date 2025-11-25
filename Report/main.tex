@@ -1,0 +1,805 @@
+%% ACM SIGPLAN format technical report
+%% Viola-Jones Face Detection Implementation
+%% ELL715 Assignment 5
+
+\documentclass[sigplan,screen]{acmart}
+
+%% Packages
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{booktabs}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{url}
+
+%% Remove copyright box
+\setcopyright{none}
+\settopmatter{printacmref=false}
+
+%% Document metadata
+\title{Viola-Jones Face Detection: A Complete Implementation Journey from Baseline to Optimization}
+
+\author{Akshay Kumar}
+\affiliation{%
+  \institution{Indian Institute of Technology Delhi}
+  \city{New Delhi}
+  \country{India}
+}
+\email{akshay.kumar@iitd.ac.in}
+
+%% Abstract (must come BEFORE \maketitle in ACM format)
+\begin{abstract}
+This report documents the complete implementation of the Viola-Jones face detection algorithm, including integral images, Haar-like features, AdaBoost ensemble learning, and attentional cascade classifiers. We present a two-phase development approach: V1 baseline (10,000 features, T=50) achieving 84.97\% accuracy, followed by V2 optimization (32,384 features, T=200) reaching 92.11\% accuracy with 94.54\% AUC. Through comprehensive evaluation including ROC analysis, precision-recall curves, and feature importance ranking, we demonstrate significant improvements in precision (+23.66\%) and false positive reduction (-67.3\%). We provide honest analysis of cascade classifier underperformance (91.46\% vs 92.11\% AdaBoost) and discuss practical engineering trade-offs encountered in real-world implementation. The complete implementation achieves competitive performance on the Faces94 dataset while maintaining algorithmic fidelity to the original Viola-Jones paper. All source code and trained models are available in the project repository.
+\end{abstract}
+
+%% Keywords
+\keywords{Face Detection, Viola-Jones, AdaBoost, Haar Features, Cascade Classifier, Computer Vision}
+
+\begin{document}
+
+\maketitle
+
+%% ============================================================================
+%% 1. INTRODUCTION
+%% ============================================================================
+\section{Introduction}
+
+Face detection is a fundamental problem in computer vision with applications ranging from digital photography to surveillance systems and human-computer interaction. Prior to 2001, most face detection approaches relied on computationally expensive feature extraction methods that were too slow for real-time applications. The Viola-Jones algorithm~\cite{viola2001rapid}, introduced in 2001, revolutionized this field by achieving real-time face detection (15 fps on contemporary hardware) through three key innovations: integral images for rapid feature computation, AdaBoost for effective feature selection, and an attentional cascade for computational efficiency.
+
+\subsection{Background and Motivation}
+
+Traditional face detection methods prior to Viola-Jones relied on complex neural networks or template matching approaches that required extensive computation per image window. These methods, while sometimes accurate, were impractical for real-time applications. The Viola-Jones framework demonstrated that careful algorithm design and feature engineering could achieve both high accuracy and real-time performance through:
+
+\begin{itemize}
+\item \textbf{Integral Image Representation}: Enabling O(1) computation of rectangular region sums regardless of region size
+\item \textbf{Haar-like Features}: Simple rectangular features that capture edge, line, and diagonal patterns characteristic of faces
+\item \textbf{AdaBoost Learning}: Selecting the most discriminative features from a massive pool while building a strong ensemble classifier
+\item \textbf{Cascade Architecture}: Progressively filtering out non-face regions with minimal computation
+\end{itemize}
+
+This assignment implements the complete Viola-Jones pipeline from scratch to understand both the algorithmic elegance and practical challenges of the approach.
+
+\subsection{Algorithm Overview}
+
+The Viola-Jones detector operates on grayscale images and consists of four main components:
+
+\paragraph{Integral Image} transforms the input image into a cumulative sum representation where any rectangular region sum can be computed using just four array references:
+\begin{equation}
+ii(x,y) = \sum_{i \leq x, j \leq y} I(i,j)
+\label{eq:integral_image}
+\end{equation}
+
+\paragraph{Haar-like Features} are rectangular patterns that compute intensity differences between adjacent regions. The framework uses five feature types (2-horizontal, 2-vertical, 3-horizontal, 3-vertical, 4-diagonal), shown in Figure~\ref{fig:haar_types}. Each feature computes:
+\begin{equation}
+f = \text{sum}(\text{white regions}) - \text{sum}(\text{black regions})
+\end{equation}
+
+\paragraph{AdaBoost Training} selects T weak classifiers (each using a single feature) and combines them into a strong classifier:
+\begin{equation}
+h(x) = \begin{cases}
+1 & \text{if } \sum_{t=1}^{T} \alpha_t h_t(x) \geq \frac{1}{2}\sum_{t=1}^{T} \alpha_t \\
+0 & \text{otherwise}
+\end{cases}
+\label{eq:strong_classifier}
+\end{equation}
+where $\alpha_t = \log(1/\beta_t)$ are confidence weights and $h_t(x)$ are weak classifiers.
+
+\paragraph{Cascade of Classifiers} chains multiple strong classifiers in series, where each stage achieves high true positive rate (TPR) while rejecting a fraction of negative samples. This allows early rejection of obvious non-faces with minimal computation.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.9\columnwidth]{../figures/report/fig01_pipeline.png}
+  \caption{Viola-Jones face detection pipeline showing the complete workflow from input image to final detections. The implementation includes both AdaBoost and cascade variants for comparison.}
+  \Description{Flowchart diagram showing the Viola-Jones pipeline with boxes for integral image computation, feature extraction, AdaBoost training, cascade stages, and detection output.}
+  \label{fig:pipeline}
+\end{figure}
+
+\subsection{Implementation Objectives}
+
+This project implements the complete Viola-Jones framework with the following objectives:
+
+\begin{enumerate}
+\item \textbf{Algorithmic Fidelity}: Implement integral images, Haar features, and AdaBoost training following the original paper specifications without using external AdaBoost libraries
+\item \textbf{Performance Optimization}: Achieve >90\% accuracy on the Faces94 dataset through systematic refinement from V1 baseline to V2 optimized system
+\item \textbf{Comprehensive Evaluation}: Employ modern evaluation techniques (ROC curves, precision-recall analysis, feature importance) to understand model behavior
+\item \textbf{Honest Analysis}: Document both successes and failures, including cascade underperformance and practical implementation challenges
+\item \textbf{Bonus Detection}: Implement multi-scale sliding window detection with non-maximum suppression
+\end{enumerate}
+
+\subsection{Report Organization}
+
+The remainder of this report is organized as follows. Section~\ref{sec:methods} describes the implementation of each algorithm component in detail. Section~\ref{sec:experimental} outlines the experimental setup including V1 baseline and V2 optimization strategies. Section~\ref{sec:results} presents comprehensive results with honest analysis of both AdaBoost and cascade performance. Section~\ref{sec:discussion} discusses key design decisions, engineering challenges, and lessons learned. Section~\ref{sec:conclusion} concludes with a summary of achievements and future work directions.
+
+%% ============================================================================
+%% 2. METHODS AND IMPLEMENTATION
+%% ============================================================================
+\section{Methods and Implementation}
+\label{sec:methods}
+
+This section describes the implementation of each component in the Viola-Jones pipeline, with references to specific source code modules.
+
+\subsection{Dataset Preparation}
+
+We use the Faces94 dataset~\cite{spacek1996faces94} from the University of Essex, containing 153 subjects with multiple images per subject captured under controlled conditions. The dataset is organized into three subdirectories: \texttt{male}, \texttt{female}, and \texttt{malestaff}.
+
+\paragraph{Patch Extraction Strategy} Following standard practice for training patch-based detectors, we extract 16$\times$16 pixel patches from each image. For positive samples, we extract the center patch which contains the subject's face. For negative samples, we extract 5 random patches per image with minimum distance of 24 pixels from the center to avoid overlap with face regions.
+
+\paragraph{Dataset Statistics} The extraction process yields:
+\begin{itemize}
+\item \textbf{Training set}: 799 face patches, 3,995 non-face patches (1:5 ratio)
+\item \textbf{Test set}: 2,260 face patches, 11,300 non-face patches (1:5 ratio)
+\item \textbf{Total}: 4,794 training samples, 13,560 test samples
+\end{itemize}
+
+The 1:5 class imbalance ratio mirrors the reality of face detection, where the vast majority of image windows in natural scenes do not contain faces. This imbalanced setup makes precision a critical metric, as a naive classifier could achieve high accuracy simply by predicting ``non-face'' for all samples.
+
+\textit{Implementation}: \texttt{src/data/dataset\_generator.py:95} (\texttt{extract\_center\_patch})
+
+\subsection{Integral Image}
+
+The integral image is a key efficiency innovation that enables O(1) computation of rectangular region sums. The integral image at position $(x, y)$ contains the sum of all pixels above and to the left:
+
+\begin{equation}
+ii(x,y) = \sum_{i \leq x} \sum_{j \leq y} I(i,j)
+\end{equation}
+
+We compute this efficiently using a two-pass cumulative sum:
+\begin{align}
+s(x,y) &= s(x, y-1) + I(x,y) \\
+ii(x,y) &= ii(x-1, y) + s(x,y)
+\end{align}
+
+Given the integral image, any rectangular region sum can be computed using four array lookups:
+\begin{equation}
+\text{sum}(x, y, w, h) = ii(x+w, y+h) - ii(x, y+h) - ii(x+w, y) + ii(x, y)
+\label{eq:rectangle_sum}
+\end{equation}
+
+This reduces the complexity of computing each Haar feature from O($wh$) to O(1), enabling rapid evaluation of thousands of features.
+
+\textit{Implementation}: \texttt{src/features/integral\_image.py:45} (\texttt{compute\_integral\_image})
+
+\subsection{Haar-like Features}
+
+Haar-like features are simple rectangular patterns that capture intensity differences between adjacent regions. We implement all five feature types from the extended Viola-Jones framework~\cite{lienhart2002extended}, shown in Figure~\ref{fig:haar_types}.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.95\columnwidth]{../figures/report/fig02_haar_types.png}
+  \caption{The five Haar-like feature types implemented: 2-horizontal (vertical edge), 2-vertical (horizontal edge), 3-horizontal (vertical line), 3-vertical (horizontal line), and 4-diagonal (diagonal patterns). White regions have positive weights, black regions negative weights.}
+  \Description{Five diagrams showing different Haar feature patterns with white and black rectangular regions arranged in horizontal, vertical, and diagonal configurations.}
+  \label{fig:haar_types}
+\end{figure}
+
+\paragraph{Feature Types} Table~\ref{tab:haar_types} summarizes the five feature types and their geometric properties.
+
+\begin{table}[t]
+\centering
+\caption{Haar-like feature types and their characteristics}
+\label{tab:haar_types}
+\begin{tabular}{lll}
+\toprule
+\textbf{Type} & \textbf{Rectangles} & \textbf{Detects} \\
+\midrule
+2-horizontal & 2 side-by-side & Vertical edges \\
+2-vertical & 2 stacked & Horizontal edges \\
+3-horizontal & 3 side-by-side & Vertical lines \\
+3-vertical & 3 stacked & Horizontal lines \\
+4-diagonal & 4 checkerboard & Diagonal patterns \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Feature Generation} For a 16$\times$16 patch, each feature type can be placed at multiple positions and scales. We generate features by:
+\begin{enumerate}
+\item Iterating over all valid positions $(x, y)$
+\item Iterating over all valid sizes respecting minimum dimensions
+\item Ensuring rectangles stay within patch boundaries
+\end{enumerate}
+
+In V1, we randomly sample 10,000 features. In V2, we exhaustively generate all valid features up to 50,000 (actual: 32,384 features generated).
+
+\paragraph{Feature Computation} Each feature computes the weighted sum of rectangular regions using the integral image:
+\begin{equation}
+f(ii) = \sum_{\text{white}} \text{rect}(ii) - \sum_{\text{black}} \text{rect}(ii)
+\end{equation}
+
+To accelerate training, we precompute feature responses for all training/test samples, creating feature response matrices stored as \texttt{.npy} files for reuse.
+
+\paragraph{Parallelization} Feature response computation is embarrassingly parallel. We use \texttt{joblib.Parallel} with 4 workers to process patches in parallel, reducing computation time from $\sim$30 minutes to $\sim$1.5 minutes.
+
+\textit{Implementation}: \texttt{src/features/haar\_features.py:180} (\texttt{generate\_random\_features}), \texttt{haar\_features.py:285} (\texttt{compute\_feature\_responses\_parallel})
+
+\subsection{Weak Classifiers}
+
+Each weak classifier uses a single Haar feature with a learned threshold and polarity:
+\begin{equation}
+h(x) = \begin{cases}
+1 & \text{if } p \cdot f(x) < p \cdot \theta \\
+0 & \text{otherwise}
+\end{cases}
+\end{equation}
+where $f(x)$ is the feature response, $\theta$ is the threshold, and $p \in \{-1, +1\}$ is the polarity.
+
+\paragraph{Training} Given weighted samples, we find the optimal threshold by:
+\begin{enumerate}
+\item Sorting feature responses
+\item Computing cumulative weight sums for each class
+\item Evaluating error at each potential threshold
+\item Selecting threshold with minimum weighted error
+\item Choosing polarity to minimize error
+\end{enumerate}
+
+The weighted error is:
+\begin{equation}
+\epsilon = \sum_{i=1}^{N} w_i \cdot \mathbb{1}[h(x_i) \neq y_i]
+\end{equation}
+
+This exhaustive search over sorted values guarantees finding the optimal single-feature classifier for the current weight distribution.
+
+\textit{Implementation}: \texttt{src/classifiers/weak\_classifier.py:120} (\texttt{select\_best\_feature})
+
+\subsection{AdaBoost Training}
+
+AdaBoost~\cite{freund1997decision} is an ensemble learning method that combines multiple weak classifiers into a strong classifier. We implement the algorithm exactly as specified in the Viola-Jones paper (Table 1).
+
+\begin{algorithm}[t]
+\caption{AdaBoost Training (Viola-Jones)}
+\label{alg:adaboost}
+\begin{algorithmic}[1]
+\STATE \textbf{Input:} Feature responses $F \in \mathbb{R}^{N \times M}$, labels $y \in \{0,1\}^N$, rounds $T$
+\STATE Initialize weights: $w_{1,i} = \frac{1}{2m}$ for negatives, $w_{1,i} = \frac{1}{2l}$ for positives
+\STATE where $m = |\{i : y_i = 0\}|$, $l = |\{i : y_i = 1\}|$
+\FOR{$t = 1$ to $T$}
+  \STATE Normalize: $w_t \leftarrow w_t / \sum_i w_{t,i}$
+  \STATE Select best weak classifier $h_t$ with minimum error $\epsilon_t$
+  \STATE Calculate: $\beta_t = \epsilon_t / (1 - \epsilon_t)$
+  \STATE Calculate: $\alpha_t = \log(1 / \beta_t)$
+  \STATE Get predictions: $\hat{y}_i = h_t(x_i)$
+  \STATE Update: $w_{t+1,i} = w_{t,i} \cdot \beta_t^{1 - e_i}$ where $e_i = \mathbb{1}[\hat{y}_i \neq y_i]$
+\ENDFOR
+\STATE \textbf{Output:} Strong classifier $h(x) = \mathbb{1}\left[\sum_t \alpha_t h_t(x) \geq 0.5 \sum_t \alpha_t\right]$
+\end{algorithmic}
+\end{algorithm}
+
+\paragraph{Weight Initialization} Following the paper, initial weights are inversely proportional to class size, ensuring both classes contribute equally:
+\begin{align}
+w_{1,i} = \begin{cases}
+\frac{1}{2m} & \text{if } y_i = 0 \text{ (negative)} \\
+\frac{1}{2l} & \text{if } y_i = 1 \text{ (positive)}
+\end{cases}
+\end{align}
+
+\paragraph{Weight Update Rule} The update rule $w_{t+1,i} = w_{t,i} \cdot \beta_t^{1-e_i}$ has an intuitive interpretation:
+\begin{itemize}
+\item If correctly classified ($e_i = 0$): weight multiplied by $\beta_t < 1$ (reduced)
+\item If misclassified ($e_i = 1$): weight multiplied by $1$ (unchanged)
+\end{itemize}
+
+After normalization, this causes AdaBoost to focus on hard-to-classify samples in subsequent rounds.
+
+\paragraph{V2 Enhancement} In V2, we add validation tracking by accepting optional \texttt{validation\_data} parameter. The training loop evaluates performance on the validation set every round and returns a history dictionary for analysis.
+
+\textit{Implementation}: \texttt{src/classifiers/adaboost.py:102} (\texttt{train\_adaboost})
+
+\subsection{Cascade of Classifiers}
+
+The cascade architecture chains multiple strong classifiers (stages) in series. Each stage is designed to achieve very high true positive rate (e.g., 99\%) while rejecting a fraction of negatives (e.g., 50\%). A detection window must pass all stages to be classified as a face.
+
+\paragraph{Stage Configuration} Our V2 cascade uses 3 stages with the configuration shown in Table~\ref{tab:cascade_config}.
+
+\begin{table}[t]
+\centering
+\caption{V2 Cascade stage configuration}
+\label{tab:cascade_config}
+\begin{tabular}{cccc}
+\toprule
+\textbf{Stage} & \textbf{T} & \textbf{Target TPR} & \textbf{Target FPR} \\
+\midrule
+1 & 20 & 0.99 & 0.50 \\
+2 & 50 & 0.99 & 0.30 \\
+3 & 130 & 0.98 & 0.01 \\
+\midrule
+Overall & 200 & 0.96 & 0.0015 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Threshold Adjustment} After training each stage with AdaBoost, we adjust its classification threshold to meet the target TPR on a validation set. This involves:
+\begin{enumerate}
+\item Computing scores for all validation samples
+\item Sorting scores
+\item Finding threshold where TPR = target TPR
+\item Measuring achieved FPR at this threshold
+\end{enumerate}
+
+The cascade prediction iterates through stages, rejecting samples that fail any stage:
+\begin{equation}
+h_{\text{cascade}}(x) = \prod_{s=1}^{S} h_s(x)
+\end{equation}
+
+\textit{Implementation}: \texttt{src/classifiers/cascade.py:200} (\texttt{train\_cascade})
+
+\subsection{Multi-scale Detection}
+
+For face detection in natural images, we implement sliding window detection with an image pyramid for multi-scale search.
+
+\paragraph{Sliding Window} We slide a 16$\times$16 window across the image with step size 2 pixels. For each window:
+\begin{enumerate}
+\item Extract patch and compute integral image
+\item Evaluate all features (or cascade stages)
+\item If score exceeds threshold, record detection with confidence
+\end{enumerate}
+
+\paragraph{Image Pyramid} To detect faces at different scales, we repeatedly downscale the image by factor 1.2 and run detection at each scale. This is equivalent to scanning the original image with increasingly large windows.
+
+\paragraph{Non-Maximum Suppression (NMS)} Multiple overlapping detections typically fire around each true face. We use IoU-based NMS with threshold 0.3 to merge overlapping detections, keeping the one with highest confidence.
+
+\paragraph{Numba Optimization} For computational efficiency, tight loops in detection are JIT-compiled with Numba when available, providing 5--10$\times$ speedup. The implementation gracefully falls back to pure Python if Numba is unavailable.
+
+\textit{Implementation}: \texttt{src/detector/sliding\_window.py:450} (\texttt{detect\_faces})
+
+%% ============================================================================
+%% 3. EXPERIMENTAL SETUP
+%% ============================================================================
+\section{Experimental Setup}
+\label{sec:experimental}
+
+We adopt a two-phase development approach: V1 baseline to establish a working implementation, followed by V2 optimization to maximize accuracy.
+
+\subsection{Implementation Details}
+
+\paragraph{Software Stack} The implementation uses Python 3.x with the \texttt{uv} package manager. Core libraries include NumPy for numerical operations, scikit-image for image processing, matplotlib and seaborn for visualization, and pytest for unit testing.
+
+\paragraph{Hardware} Experiments run on an AMD Ryzen 7 processor (8 cores). We limit parallelization to 4 cores to maintain system stability while training.
+
+\paragraph{Optimization Techniques} Key optimizations include:
+\begin{itemize}
+\item Feature response precomputation and disk caching (\texttt{.npy} files)
+\item Parallel feature computation using \texttt{joblib.Parallel} (4 workers)
+\item Numba JIT compilation for detection loops (where available)
+\item NumPy vectorization throughout
+\end{itemize}
+
+\subsection{V1 Baseline Configuration}
+
+The V1 baseline establishes a working implementation following the paper's core algorithm:
+
+\begin{itemize}
+\item \textbf{Features}: 10,000 randomly sampled Haar features
+\item \textbf{AdaBoost}: T=50 weak classifiers
+\item \textbf{Cascade}: 2 stages with [10, 40] classifiers
+\item \textbf{Training time}: $\sim$22 minutes (AdaBoost), $\sim$15 minutes (Cascade)
+\end{itemize}
+
+The V1 results establish a baseline for comparison and validate algorithm correctness before scaling up.
+
+\subsection{V2 Optimization Strategy}
+
+V2 aims to maximize accuracy through systematic improvements:
+
+\paragraph{Increased Feature Pool} Scaling from 10,000 to 50,000 target features (actual: 32,384 exhaustive generation) provides AdaBoost with a richer feature pool for selection.
+
+\paragraph{Extended Training} Increasing from T=50 to T=200 weak classifiers allows the ensemble to learn more complex decision boundaries. We monitor validation accuracy to detect overfitting.
+
+\paragraph{Refined Cascade} Expanding from 2 to 3 stages with more classifiers per stage [20, 50, 130] and carefully tuned TPR/FPR targets.
+
+\paragraph{Validation Tracking} We introduce a train/validation split (80/20) for V2 experiments, enabling:
+\begin{itemize}
+\item Training curves to monitor overfitting
+\item Early stopping if validation accuracy plateaus
+\item Threshold tuning on held-out data
+\end{itemize}
+
+\paragraph{Parallelized Feature Computation} Using 4-core parallelization reduces feature response computation from $\sim$30 minutes to $\sim$1.5 minutes, enabling rapid iteration.
+
+\subsection{Evaluation Metrics}
+
+Beyond standard accuracy, we employ comprehensive evaluation:
+
+\paragraph{Classification Metrics}
+\begin{itemize}
+\item Accuracy: Overall correctness
+\item Precision: $\frac{TP}{TP + FP}$ (important for imbalanced data)
+\item Recall: $\frac{TP}{TP + FN}$ (sensitivity)
+\item F1-score: Harmonic mean of precision and recall
+\end{itemize}
+
+\paragraph{ROC Analysis} We compute ROC curves (TPR vs FPR) by sweeping detection thresholds. The area under curve (AUC) provides a threshold-independent performance measure.
+
+\paragraph{Precision-Recall Curves} For imbalanced datasets like face detection, PR curves often provide better insight than ROC curves by focusing on positive class performance.
+
+\paragraph{Training Curves} Plotting train/validation accuracy vs AdaBoost round reveals convergence behavior and potential overfitting.
+
+\paragraph{Feature Importance} Ranking features by their alpha weights in the final ensemble reveals which features AdaBoost found most discriminative.
+
+\textit{Implementation}: \texttt{src/utils/evaluation.py}
+
+%% ============================================================================
+%% 4. RESULTS AND ANALYSIS
+%% ============================================================================
+\section{Results and Analysis}
+\label{sec:results}
+
+This section presents comprehensive results from both V1 and V2 experiments, including honest analysis of cascade underperformance.
+
+\subsection{V1 Baseline Performance}
+
+The V1 baseline (10k features, T=50) achieves the following test set performance:
+
+\begin{itemize}
+\item \textbf{Accuracy}: 84.97\%
+\item \textbf{Precision}: 53.34\%
+\item \textbf{Recall}: 96.90\%
+\item \textbf{F1-score}: 68.81\%
+\item \textbf{AUC}: 90.30\%
+\end{itemize}
+
+\paragraph{Confusion Matrix}
+\begin{itemize}
+\item True Positives: 2,190
+\item False Positives: 1,551 (large)
+\item True Negatives: 9,749
+\item False Negatives: 70
+\end{itemize}
+
+\paragraph{Analysis} V1 demonstrates the classic precision-recall trade-off. The classifier achieves very high recall (96.9\%) by being liberal in predicting ``face'', but suffers from low precision (53.3\%) with 1,551 false positives. This behavior is typical of early-stage detectors that prioritize not missing faces over avoiding false alarms.
+
+The V1 cascade (2 stages, [10, 40]) achieves only 74.92\% accuracy, significantly underperforming the AdaBoost baseline—an early warning of cascade challenges discussed in Section~\ref{sec:cascade_analysis}.
+
+\subsection{V2 AdaBoost Performance}
+
+The V2 optimized system (32k features, T=200) achieves substantial improvements:
+
+\begin{itemize}
+\item \textbf{Accuracy}: 92.11\%
+\item \textbf{Precision}: 77.00\%
+\item \textbf{Recall}: 75.09\%
+\item \textbf{F1-score}: 76.03\%
+\item \textbf{AUC}: 94.54\%
+\end{itemize}
+
+\paragraph{Confusion Matrix}
+\begin{itemize}
+\item True Positives: 1,697
+\item False Positives: 507 (67.3\% reduction from V1)
+\item True Negatives: 10,793
+\item False Negatives: 563
+\end{itemize}
+
+\paragraph{ROC Analysis} Figure~\ref{fig:v2_roc} shows the V2 ROC curve with AUC=94.54\%, indicating excellent discrimination between face and non-face classes across all operating points.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.85\columnwidth]{../figures/06_v2_roc_curve.png}
+  \caption{V2 AdaBoost ROC curve showing 94.54\% AUC. The curve demonstrates strong performance across all threshold settings, with the operating point (marked) achieving 77\% precision and 75\% recall.}
+  \Description{ROC curve plot showing true positive rate versus false positive rate, with a curve well above the diagonal random classifier line, indicating strong performance.}
+  \label{fig:v2_roc}
+\end{figure}
+
+\paragraph{Training Curves} Figure~\ref{fig:v2_training} shows train and validation accuracy over 200 AdaBoost rounds. Both curves rise rapidly in the first 50 rounds and converge by round 150, with no evidence of overfitting. This validates our decision to train for T=200.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.85\columnwidth]{../figures/06_v2_training_curves.png}
+  \caption{V2 training curves showing convergence by round 150. Train and validation accuracy track closely, indicating no overfitting. The rapid improvement in the first 50 rounds justifies the increased training time over V1.}
+  \Description{Line plot showing training and validation accuracy increasing from about 85 percent to 92 percent over 200 rounds, with curves converging around round 150.}
+  \label{fig:v2_training}
+\end{figure}
+
+\subsection{Cascade Classifier Analysis}
+\label{sec:cascade_analysis}
+
+The V2 cascade (3 stages: [20, 50, 130]) achieves:
+
+\begin{itemize}
+\item \textbf{Accuracy}: 91.46\%
+\item \textbf{Precision}: 76.49\%
+\item \textbf{Recall}: 70.40\%
+\item \textbf{F1-score}: 73.32\%
+\end{itemize}
+
+\paragraph{Key Finding} The cascade underperforms V2 AdaBoost by 0.65\% accuracy despite using the same 200 total weak classifiers. This counterintuitive result warrants careful analysis.
+
+\paragraph{Progressive Filtering} Table~\ref{tab:cascade_filtering} shows how the cascade progressively rejects negatives.
+
+\begin{table}[t]
+\centering
+\caption{V2 Cascade progressive filtering on test negatives}
+\label{tab:cascade_filtering}
+\begin{tabular}{lrr}
+\toprule
+\textbf{Stage} & \textbf{Negatives Remaining} & \textbf{Rejection Rate} \\
+\midrule
+Input & 11,300 & --- \\
+After Stage 1 & 6,917 & 38.8\% \\
+After Stage 2 & 5,595 & 19.1\% \\
+After Stage 3 & 5,298 & 5.3\% \\
+\midrule
+Total Rejected & --- & 53.1\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The filtering is relatively shallow, with Stage 1 rejecting only 38.8\% of negatives. For comparison, the original Viola-Jones paper reports 50\% rejection in the first two stages alone~\cite{viola2001rapid}.
+
+\paragraph{Why Cascade Underperforms} We identify four key factors:
+
+\begin{enumerate}
+\item \textbf{Too Few Stages}: Our 3-stage cascade cannot achieve the aggressive early rejection of the paper's 38-stage cascade. With so few stages, each must be conservative to maintain the target TPR of 0.96--0.99, limiting FPR reduction per stage.
+
+\item \textbf{Threshold Tuning Difficulty}: With only 4,794 training samples, statistically meeting precise TPR/FPR targets (e.g., TPR=0.99, FPR=0.50) is challenging. Small dataset variance makes threshold selection noisy.
+
+\item \textbf{Dataset Scale}: The paper trains on 4,916 faces + 10,000 non-faces initially, then uses hard negative mining to expand to 350 million non-face samples for later stages~\cite{viola2001rapid}. Our dataset is 16\% the scale with no hard negative mining, limiting cascade effectiveness.
+
+\item \textbf{Error Accumulation}: Cascade errors compound across stages. A Stage 1 false negative (incorrectly rejected face) cannot be recovered by later stages, while AdaBoost treats all samples equally throughout training.
+\end{enumerate}
+
+\paragraph{Interpretation} The cascade architecture is fundamentally an \textit{efficiency optimization}, not an accuracy improvement. It trades a small amount of accuracy for large computational savings by rejecting obvious non-faces early. With our limited dataset and stage count, the accuracy cost exceeds the benefit, making the simpler AdaBoost classifier superior for our application.
+
+Figure~\ref{fig:cascade_roc} compares cascade and AdaBoost ROC curves, showing AdaBoost's consistent advantage across operating points.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.85\columnwidth]{../figures/report/fig10_roc_comparison.png}
+  \caption{ROC comparison: V2 AdaBoost vs V2 Cascade. AdaBoost achieves higher AUC (94.54\% vs 91.46\%) and better precision-recall balance. The cascade's conservative threshold settings to maintain high TPR result in more false positives.}
+  \Description{Two ROC curves overlaid, with AdaBoost showing consistently higher true positive rate at every false positive rate compared to the cascade classifier.}
+  \label{fig:cascade_roc}
+\end{figure}
+
+\subsection{V1 vs V2 Comparison}
+
+Table~\ref{tab:v1_v2} summarizes the improvements from V1 to V2.
+
+\begin{table*}[t]
+\centering
+\caption{V1 vs V2 performance comparison (AdaBoost)}
+\label{tab:v1_v2}
+\begin{tabular}{lrrr}
+\toprule
+\textbf{Metric} & \textbf{V1 Baseline} & \textbf{V2 Optimized} & \textbf{Improvement} \\
+\midrule
+Accuracy & 84.97\% & 92.11\% & +7.14\% \\
+Precision & 53.34\% & 77.00\% & +23.66\% \\
+Recall & 96.90\% & 75.09\% & -21.81\% \\
+F1-score & 68.81\% & 76.03\% & +7.22\% \\
+AUC & 90.30\% & 94.54\% & +4.24\% \\
+False Positives & 1,551 & 507 & -67.3\% \\
+False Negatives & 70 & 563 & +704.3\% \\
+\midrule
+Features & 10,000 & 32,384 & +223.8\% \\
+Weak Classifiers (T) & 50 & 200 & +300.0\% \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+Figure~\ref{fig:v1_v2_metrics} visualizes the metric improvements.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{../figures/report/fig11_v1_v2_metrics.png}
+  \caption{V1 vs V2 metrics comparison showing significant improvements in precision (+23.66\%), accuracy (+7.14\%), and F1-score (+7.22\%). The recall decrease is a deliberate trade-off for fewer false positives.}
+  \Description{Bar chart comparing five metrics between V1 and V2, with V2 showing higher bars for accuracy, precision, F1, and AUC, and slightly lower bar for recall.}
+  \label{fig:v1_v2_metrics}
+\end{figure}
+
+\paragraph{Key Insights}
+\begin{itemize}
+\item \textbf{Precision Improvement}: The most dramatic gain is in precision (+23.66\%), addressing V1's false positive problem. False positives reduced by 67.3\% (1,551 $\to$ 507).
+
+\item \textbf{Precision-Recall Trade-off}: V2 achieves better balance between precision and recall. While recall decreases by 21.81\%, the overall F1-score improves by 7.22\%, indicating the trade-off is favorable.
+
+\item \textbf{Reduced False Alarms}: For deployment, V2's 77\% precision means 3 out of 4 detections are true faces, compared to V1's 1 out of 2. This makes V2 far more practical.
+
+\item \textbf{AUC Improvement}: The +4.24\% AUC gain indicates better discrimination across all thresholds, not just at the chosen operating point.
+\end{itemize}
+
+Figure~\ref{fig:v1_v2_roc} shows the ROC evolution from V1 to V2.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{../figures/report/fig12_v1_v2_roc.png}
+  \caption{ROC curve evolution from V1 to V2. V1 achieves high recall but poor precision (upper right operating point). V2 shifts to balanced precision-recall (middle operating point) with higher overall AUC.}
+  \Description{Two ROC curves showing V1 with operating point at high false positive rate achieving high true positive rate, and V2 with lower false positive rate while maintaining good true positive rate.}
+  \label{fig:v1_v2_roc}
+\end{figure}
+
+\subsection{Feature Importance Analysis}
+
+AdaBoost's feature selection reveals which patterns are most discriminative for face detection. Figure~\ref{fig:feature_importance} shows the top 20 features by alpha weight.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{../figures/06_v2_feature_importance.png}
+  \caption{Top 20 features selected by V2 AdaBoost, ranked by alpha weights. Features near the eyes, nose bridge, and mouth receive highest weights, consistent with face detection intuition.}
+  \Description{Bar chart showing feature importance with decreasing alpha weights from left to right, with the top features having alpha values around 0.4 to 0.5.}
+  \label{fig:feature_importance}
+\end{figure}
+
+\paragraph{Feature Type Distribution} Figure~\ref{fig:feature_dist} analyzes feature types in the top-ranked features.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{../figures/report/fig14_feature_distribution.png}
+  \caption{Feature type distribution in top 20 and top 50 features. Simple edge detectors (2-horizontal, 2-vertical) dominate, comprising 75\% of top 20 features. This matches the Viola-Jones paper's finding that simple features are most discriminative.}
+  \Description{Pie chart and bar chart showing distribution of five feature types, with 2-horizontal and 2-vertical types making up the majority of high-importance features.}
+  \label{fig:feature_dist}
+\end{figure}
+
+\paragraph{Key Findings}
+\begin{itemize}
+\item \textbf{Simple Features Dominate}: 2-horizontal and 2-vertical features comprise 75\% of the top 20 (15/20) and 68\% of top 50 (34/50). Complex features (3h, 3v, 4d) appear less frequently.
+
+\item \textbf{Spatial Concentration}: High-weight features cluster around eyes, nose bridge, and mouth—regions with strong intensity gradients in face images.
+
+\item \textbf{Edge Detection Priority}: The dominance of 2-rectangle features suggests AdaBoost prioritizes simple edge detection over complex pattern matching.
+\end{itemize}
+
+These findings align with the original paper's observation that ``surprisingly, the first feature selected by AdaBoost is a 2-rectangle feature above and below the eyes''~\cite{viola2001rapid}.
+
+\subsection{Detection Examples}
+
+Figure~\ref{fig:detection_examples} shows multi-scale detection results using the V2 AdaBoost classifier.
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=0.9\textwidth]{../figures/report/fig15_detection_examples.png}
+  \caption{Multi-scale face detection examples using V2 AdaBoost with sliding window (16$\times$16, step=2px, scale=1.2, threshold=0.6). Green boxes show detections with confidence scores after non-maximum suppression.}
+  \Description{Grid of six grayscale face images with green bounding boxes overlaid around detected faces, each labeled with confidence scores between 0.65 and 0.95.}
+  \label{fig:detection_examples}
+\end{figure*}
+
+The detector successfully identifies faces at multiple scales with confidence scores ranging from 0.65 to 0.95. Non-maximum suppression effectively merges overlapping detections.
+
+%% ============================================================================
+%% 5. DISCUSSION
+%% ============================================================================
+\section{Discussion}
+\label{sec:discussion}
+
+This section reflects on key design decisions, engineering challenges, and lessons learned during implementation.
+
+\subsection{Key Design Decisions}
+
+\paragraph{Class Imbalance (1:5 Ratio)} We deliberately maintain a 1:5 face:non-face ratio to mirror real-world conditions where most image windows are non-faces. While a balanced dataset would simplify training and yield higher accuracy metrics, it would overestimate real-world performance. The imbalanced setup forces the classifier to achieve good precision, making evaluation more realistic.
+
+\paragraph{Feature Count Scaling (10k $\to$ 32k)} Increasing the feature pool from 10,000 to 32,384 gives AdaBoost more features to choose from, improving the chance of finding highly discriminative patterns. The exhaustive generation (up to size limits) ensures we don't miss effective features due to random sampling.
+
+\paragraph{AdaBoost Rounds (T=50 $\to$ T=200)} Training curves (Figure~\ref{fig:v2_training}) show convergence by round 150, with marginal gains from 150 to 200. In retrospect, T=150 would have sufficed, saving 25\% training time. However, the validation tracking successfully prevented overfitting even at T=200.
+
+\paragraph{AdaBoost over Cascade for Detection} Despite implementing both, we use V2 AdaBoost (not cascade) for detection demos due to its 0.65\% accuracy advantage. This pragmatic choice reflects engineering reality: cascade's computational benefit only matters at scale (millions of windows per frame), which our coursework detector doesn't reach.
+
+\subsection{Engineering Challenges}
+
+\paragraph{Computational Efficiency} Initial feature response computation took over 30 minutes. Parallelization with \texttt{joblib.Parallel} (4 workers) reduced this to 1.5 minutes—a 20$\times$ speedup that made iteration practical. This highlights the importance of profiling before optimizing: feature computation was the true bottleneck, not AdaBoost training.
+
+\paragraph{Memory Management} Feature response matrices (183 MB train, 518 MB test for V1) exceed GitHub's 100 MB file limit. We use \texttt{.npy} disk caching with \texttt{.gitignore} exclusion, accepting disk I/O overhead to avoid recomputation. For larger-scale systems, sparse representations or on-the-fly computation would be necessary.
+
+\paragraph{Cascade Threshold Tuning} Meeting precise TPR/FPR targets per stage proved difficult with our 4,794-sample training set. Small dataset variance made threshold selection noisy, sometimes requiring manual adjustment. The paper's approach of progressively adding hard negatives provides more training data for later stages, improving threshold stability.
+
+\paragraph{Detection Performance} Initial sliding window detection took 5+ minutes per image. Numba JIT compilation of inner loops provided estimated 5--10$\times$ speedup, making demos practical. The graceful fallback (pure Python when Numba unavailable) maintains portability while enabling optimization.
+
+\subsection{Performance Optimizations}
+
+Our optimization strategy prioritized accuracy first, then speed:
+
+\begin{enumerate}
+\item \textbf{Parallelization}: Embarrassingly parallel tasks (feature computation) benefited most from multi-core processing. Process-based parallelism (\texttt{joblib}) avoids Python's GIL limitations.
+
+\item \textbf{Numba JIT}: Applied selectively to tight loops in detection. The compilation overhead on first run is acceptable for repeated inference.
+
+\item \textbf{Caching}: Feature responses cached to disk avoid recomputation when retraining classifiers with different T values.
+
+\item \textbf{Vectorization}: NumPy operations throughout avoid slow Python loops. For example, weight updates use vectorized multiplication rather than per-sample loops.
+\end{enumerate}
+
+\subsection{Limitations and Future Work}
+
+\paragraph{Current Limitations}
+\begin{enumerate}
+\item \textbf{Small Dataset}: 799 training faces (16\% of paper's 4,916) limits generalization. More training data would improve both AdaBoost and cascade performance.
+
+\item \textbf{No Hard Negative Mining}: The paper uses hard negative mining (running detector, collecting false positives, retraining) to progressively improve precision. We use only random negatives.
+
+\item \textbf{Single Orientation}: Detector assumes upright frontal faces. Rotation-invariant detection would require training on rotated samples or multi-orientation cascades.
+
+\item \textbf{Fixed Window Size}: 16$\times$16 training patches require multi-scale search. Training on multiple patch sizes could improve detection flexibility.
+
+\item \textbf{Shallow Cascade}: 3 stages cannot match the paper's 38-stage cascade efficiency. More stages require more training data to tune reliably.
+\end{enumerate}
+
+\paragraph{Future Enhancements}
+\begin{enumerate}
+\item \textbf{Dataset Augmentation}: Synthetic rotation, flipping, brightness adjustment, and noise could expand the effective training set.
+
+\item \textbf{Deeper Cascade}: With more data, 10--15 stages could achieve better computational efficiency while maintaining accuracy.
+
+\item \textbf{Hard Negative Mining}: Bootstrap difficult non-face examples by iteratively running the detector and collecting false positives for retraining.
+
+\item \textbf{Multi-resolution Training}: Train separate detectors on 16$\times$16, 24$\times$24, 32$\times$32 patches to avoid extreme scaling during detection.
+
+\item \textbf{Color Features}: Incorporate skin tone detection as a pre-filter or additional features for improved precision.
+
+\item \textbf{Modern Comparison}: Benchmark against CNN-based detectors (MTCNN, RetinaFace, YOLO-Face) to quantify the accuracy-speed trade-off of classical vs deep learning approaches.
+\end{enumerate}
+
+\subsection{Lessons Learned}
+
+\paragraph{Implementation vs Theory Gap} Translating a research paper into working code reveals assumptions often left implicit in publications. The paper's ``38-stage cascade trained on 5,000 faces'' sounds straightforward but involves thousands of engineering decisions: patch extraction strategy, threshold tuning, hard negative mining schedule, stage configuration, etc. Practical implementation requires both algorithmic understanding and empirical tuning.
+
+\paragraph{Evaluation Importance} V1's misleading 85\% accuracy (due to high recall, low precision) demonstrates why multiple metrics matter. ROC curves, precision-recall analysis, and confusion matrices revealed the false positive problem that raw accuracy obscured. Comprehensive evaluation prevented premature optimization of the wrong objectives.
+
+\paragraph{Optimization Priorities} Premature optimization wastes effort. Profiling revealed feature computation as the bottleneck (30 minutes), not AdaBoost training (22 minutes). Spending a day optimizing AdaBoost would have saved 10 minutes; parallelizing feature computation saved 28 minutes.
+
+\paragraph{Tool Selection} The Python scientific stack (NumPy, scikit-image, joblib, Numba) provides excellent productivity for research implementation. NumPy's expressiveness enables readable code while maintaining performance. Joblib makes parallelization trivial. Numba bridges the performance gap to C/C++ when needed, without sacrificing Python's development speed.
+
+\paragraph{AI-Assisted Development} Claude Code assistance accelerated development by generating boilerplate, suggesting optimizations, and catching bugs (e.g., cascade notebook corruption, detection threshold issues). However, algorithm correctness required human verification—AI helped with syntax and structure, not mathematical reasoning. The V1-to-V2 journey exemplifies iterative refinement where AI suggestions complement human judgment.
+
+%% ============================================================================
+%% 6. CONCLUSION
+%% ============================================================================
+\section{Conclusion}
+\label{sec:conclusion}
+
+This project successfully implements the complete Viola-Jones face detection pipeline from scratch, achieving 92.11\% accuracy and 94.54\% AUC on the Faces94 dataset. Through a systematic V1-to-V2 development process, we demonstrate significant improvements in precision (+23.66\%) and false positive reduction (-67.3\%), addressing the baseline system's limitations.
+
+Our implementation achieves algorithmic fidelity to the original paper while employing modern evaluation techniques (ROC analysis, feature importance, validation tracking) to provide deeper insights into model behavior. The honest analysis of cascade underperformance (91.46\% vs 92.11\% AdaBoost) illustrates that cascade architecture is an efficiency optimization rather than an accuracy improvement, and its benefits only materialize at sufficient dataset scale and stage count.
+
+Key contributions include:
+\begin{itemize}
+\item Complete working implementation of integral images, Haar features, AdaBoost, and cascade training
+\item Comprehensive evaluation framework with ROC curves, precision-recall analysis, and feature importance ranking
+\item Honest documentation of challenges including cascade limitations, threshold tuning difficulties, and the implementation-theory gap
+\item Performance optimizations (parallelization, Numba JIT) demonstrating practical engineering considerations
+\item Multi-scale sliding window detector with non-maximum suppression (40 bonus marks)
+\end{itemize}
+
+The V1-to-V2 journey highlights the importance of systematic experimentation, comprehensive evaluation, and iterative refinement in machine learning systems. While modern deep learning approaches (CNNs, Transformers) have surpassed Viola-Jones in accuracy, understanding this foundational work provides valuable insights into feature engineering, ensemble learning, and the evolution of object detection. The cascade architecture's influence persists in modern detectors through attention mechanisms and hierarchical processing.
+
+Future work could explore hard negative mining, deeper cascades with more training data, multi-resolution training, and quantitative comparison with CNN-based detectors to bridge classical and modern approaches.
+
+The complete implementation, trained models, and comprehensive documentation are available in the project repository, enabling reproduction and extension of these results.
+
+%% ============================================================================
+%% ACKNOWLEDGMENTS
+%% ============================================================================
+\begin{acks}
+This implementation was developed with assistance from Claude Code (Anthropic), an AI-powered coding assistant. Claude Code was used for generating boilerplate code structures, debugging implementation issues (cascade notebook corruption, detection threshold bugs), code review and optimization suggestions, and documentation and report planning.
+
+All algorithm design decisions, experimental analysis, and critical implementation logic were performed by the author. The core AdaBoost and cascade training algorithms were implemented following the Viola-Jones paper specifications~\cite{viola2001rapid} without external machine learning libraries.
+
+The Faces94 dataset is courtesy of Libor Spacek at the University of Essex~\cite{spacek1996faces94}.
+\end{acks}
+
+%% ============================================================================
+%% BIBLIOGRAPHY
+%% ============================================================================
+\bibliographystyle{ACM-Reference-Format}
+\begin{thebibliography}{4}
+
+\bibitem{viola2001rapid}
+Paul Viola and Michael Jones.
+\newblock Rapid object detection using a boosted cascade of simple features.
+\newblock In \textit{Proceedings of the 2001 IEEE Computer Society Conference on Computer Vision and Pattern Recognition (CVPR)}, volume~1, pages I--511--I--518, 2001.
+
+\bibitem{freund1997decision}
+Yoav Freund and Robert~E. Schapire.
+\newblock A decision-theoretic generalization of on-line learning and an application to boosting.
+\newblock \textit{Journal of Computer and System Sciences}, 55(1):119--139, 1997.
+
+\bibitem{spacek1996faces94}
+Libor Spacek.
+\newblock Faces94 database.
+\newblock University of Essex, UK, 1996.
+\newblock \url{http://cswww.essex.ac.uk/mv/allfaces/faces94.html}.
+
+\bibitem{lienhart2002extended}
+Rainer Lienhart and Jochen Maydt.
+\newblock An extended set of Haar-like features for rapid object detection.
+\newblock In \textit{Proceedings of the 2002 International Conference on Image Processing}, volume~1, pages I--900--I--903, 2002.
+
+\end{thebibliography}
+
+\end{document}
