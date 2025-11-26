@@ -20,6 +20,7 @@
 
 - Both report and code has to be zipped inside a zip file. The zip file should be named as per the following scheme:  
   `<2022EE11436>-<NAKSHAT PANDEY>`
+  
 
 - Python is recommended language for implementation. You are free to utilize any open source package/library of your choice.
 

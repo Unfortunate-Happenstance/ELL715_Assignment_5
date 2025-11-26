@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.27 (TeX Live 2025) (preloaded format=pdflatex 2025.4.17)  26 NOV 2025 19:35
+This is pdfTeX, Version 3.141592653-2.6-1.40.27 (TeX Live 2025) (preloaded format=pdflatex 2025.4.17)  26 NOV 2025 20:04
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1281,8 +1281,9 @@ local/texlive/2025/texmf-dist/fonts/enc/dvips/libertine/lbtn_76gpa5.enc}{/usr/l
 ocal/texlive/2025/texmf-dist/fonts/enc/dvips/libertine/lbtn_25tcsq.enc}
 
 {/usr/local/texlive/2025/texmf-dist/fonts/enc/dvips/libertine/lbtn_ki75ao.enc}{
-/usr/local/texlive/2025/texmf-dist/fonts/enc/dvips/libertine/lbtn_7grukw.enc}]
-<../figures/report/fig01_pipeline.png, id=172, 715.473pt x 573.5829pt>
+/usr/local/texlive/2025/texmf-dist/fonts/enc/dvips/libertine/lbtn_7grukw.enc}{/
+usr/local/texlive/2025/texmf-dist/fonts/enc/dvips/libertine/lbtn_oexx6f.enc}]
+<../figures/report/fig01_pipeline.png, id=175, 715.473pt x 573.5829pt>
 File: ../figures/report/fig01_pipeline.png Graphic file (type png)
 <use ../figures/report/fig01_pipeline.png>
 Package pdftex.def Info: ../figures/report/fig01_pipeline.png  used on input li
@@ -1306,12 +1307,6 @@ LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/it' will be
 LaTeX Font Info:    Font shape `T1/zi4/m/n' will be
 (Font)              scaled to size 8.0pt on input line 149.
 
-
-LaTeX Font Info:    Font shape `T1/LinuxBiolinumT-TLF/m/n' will be
-(Font)              scaled to size 8.0pt on input line 164.
-[2.2{/usr/local/texlive/2025/texmf-dist/fonts/enc/dvips/libertine/lbtn_oexx6f.e
-nc}{/usr/local/texlive/2025/texmf-dist/fonts/enc/dvips/inconsolata/i4-t1-4.enc}
- <../figures/report/fig01_pipeline.png>]
 Overfull \hbox (11.6661pt too wide) detected at line 170
 [][][][]\LMS/ntxsy/m/n/10 ¹\OML/nxlmi/m/it/10 x; y; w; h\LMS/ntxsy/m/n/10 º \U/
 ntxmia/m/it/10 = \OML/nxlmi/m/it/10 ii\LMS/ntxsy/m/n/10 ¹\OML/nxlmi/m/it/10 x \
@@ -1323,14 +1318,18 @@ ML/nxlmi/m/it/10 ii\LMS/ntxsy/m/n/10 ¹\OML/nxlmi/m/it/10 x \LMS/ntxsy/m/n/10 Ï
 n/10 ¹\OML/nxlmi/m/it/10 x; y\LMS/ntxsy/m/n/10 º
  []
 
-<../figures/report/fig02_haar_types.png, id=203, 859.7721pt x 233.1912pt>
+
+
+LaTeX Font Info:    Font shape `T1/LinuxBiolinumT-TLF/m/n' will be
+(Font)              scaled to size 8.0pt on input line 174.
+[2.2{/usr/local/texlive/2025/texmf-dist/fonts/enc/dvips/inconsolata/i4-t1-4.enc
+} <../figures/report/fig01_pipeline.png>]
+<../figures/report/fig02_haar_types.png, id=206, 859.7721pt x 233.1912pt>
 File: ../figures/report/fig02_haar_types.png Graphic file (type png)
 <use ../figures/report/fig02_haar_types.png>
 Package pdftex.def Info: ../figures/report/fig02_haar_types.png  used on input 
 line 183.
 (pdftex.def)             Requested size: 228.897pt x 62.08002pt.
-
-
 
 Overfull \hbox (9.8141pt too wide) in paragraph at lines 217--218
  []\T1/LinuxLibertineT-TLF/b/it/10 (-20) Feature Com-pu-ta-tion.[] \T1/LinuxLib
@@ -1341,6 +1340,8 @@ ertineT-TLF/m/n/10 (-20) Each fea-ture com-putes the weighted
 Underfull \hbox (badness 10000) in paragraph at lines 217--218
 
  []
+
+
 
 Package hyperref Info: bookmark level for unknown algorithm defaults to 0 on in
 put line 265.
@@ -1399,21 +1400,22 @@ Overfull \hbox (9.65462pt too wide) in paragraph at lines 531--543
  []
 
 
-
-[6.6 <../results/figures/v2_roc_curve.png> <../results/figures/v2_training_curv
-es.png>]
 Overfull \hbox (4.88933pt too wide) in paragraph at lines 556--557
 []\T1/LinuxLibertineT-TLF/b/n/10 (-20) Error Ac-cu-mu-la-tion\T1/LinuxLibertine
 T-TLF/m/n/10 (-20) : Cas-cade er-rors com-pound across
  []
 
-<../figures/report/fig10_roc_comparison.png, id=320, 569.4876pt x 497.6994pt>
+
+
+[6.6 <../results/figures/v2_roc_curve.png> <../results/figures/v2_training_curv
+es.png>]
+<../figures/report/fig10_roc_comparison.png, id=321, 569.4876pt x 497.6994pt>
 File: ../figures/report/fig10_roc_comparison.png Graphic file (type png)
 <use ../figures/report/fig10_roc_comparison.png>
 Package pdftex.def Info: ../figures/report/fig10_roc_comparison.png  used on in
 put line 565.
 (pdftex.def)             Requested size: 204.8047pt x 178.98178pt.
-<../figures/report/fig11_v1_v2_metrics.png, id=323, 714.0276pt x 425.9112pt>
+<../figures/report/fig11_v1_v2_metrics.png, id=324, 714.0276pt x 425.9112pt>
 File: ../figures/report/fig11_v1_v2_metrics.png Graphic file (type png)
 <use ../figures/report/fig11_v1_v2_metrics.png>
 Package pdftex.def Info: ../figures/report/fig11_v1_v2_metrics.png  used on inp
@@ -1421,23 +1423,19 @@ ut line 601.
 (pdftex.def)             Requested size: 240.94499pt x 143.72256pt.
 
 
-<../figures/report/fig12_v1_v2_roc.png, id=325, 569.4876pt x 497.6994pt>
+<../figures/report/fig12_v1_v2_roc.png, id=326, 569.4876pt x 497.6994pt>
 File: ../figures/report/fig12_v1_v2_roc.png Graphic file (type png)
 <use ../figures/report/fig12_v1_v2_roc.png>
 Package pdftex.def Info: ../figures/report/fig12_v1_v2_roc.png  used on input l
 ine 622.
 (pdftex.def)             Requested size: 240.94499pt x 210.56636pt.
-<../results/figures/v2_top_features.png, id=327, 842.6682pt x 711.6186pt>
+<../results/figures/v2_top_features.png, id=328, 842.6682pt x 711.6186pt>
 File: ../results/figures/v2_top_features.png Graphic file (type png)
 <use ../results/figures/v2_top_features.png>
 Package pdftex.def Info: ../results/figures/v2_top_features.png  used on input 
 line 634.
 (pdftex.def)             Requested size: 240.94499pt x 203.47577pt.
-
-
-[7.7 <../figures/report/fig10_roc_comparison.png> <../figures/report/fig11_v1_v
-2_metrics.png> <../figures/report/fig12_v1_v2_roc.png>]
-<../figures/report/fig14_feature_distribution.png, id=344, 879.5259pt x 363.277
+<../figures/report/fig14_feature_distribution.png, id=330, 879.5259pt x 363.277
 2pt>
 File: ../figures/report/fig14_feature_distribution.png Graphic file (type png)
 <use ../figures/report/fig14_feature_distribution.png>
@@ -1445,6 +1443,9 @@ Package pdftex.def Info: ../figures/report/fig14_feature_distribution.png  used
  on input line 644.
 (pdftex.def)             Requested size: 240.94499pt x 99.51628pt.
 
+
+[7.7 <../figures/report/fig10_roc_comparison.png> <../figures/report/fig11_v1_v
+2_metrics.png> <../figures/report/fig12_v1_v2_roc.png>]
 Overfull \hbox (7.7046pt too wide) in paragraph at lines 652--654
 []\T1/LinuxLibertineT-TLF/b/n/10 (-20) Simple Fea-tures Dom-i-nate\T1/LinuxLibe
 rtineT-TLF/m/n/10 (-20) : 2-horizontal and 2-vertical
@@ -1456,15 +1457,15 @@ Overfull \hbox (7.54343pt too wide) in paragraph at lines 657--658
 rtineT-TLF/m/n/10 (-20) : The dom-i-nance of 2-rectangle
  []
 
-
-
-<../figures/report/fig15_detection_examples.png, id=347, 1438.173pt x 767.5074p
+<../figures/report/fig15_detection_examples.png, id=350, 1438.173pt x 767.5074p
 t>
 File: ../figures/report/fig15_detection_examples.png Graphic file (type png)
 <use ../figures/report/fig15_detection_examples.png>
 Package pdftex.def Info: ../figures/report/fig15_detection_examples.png  used o
 n input line 668.
 (pdftex.def)             Requested size: 455.2979pt x 242.97237pt.
+
+
 
 Overfull \hbox (11.36777pt too wide) in paragraph at lines 674--675
 \T1/LinuxLibertineT-TLF/m/n/10 (-20) with con-fi-dence scores rang-ing from 0.6
@@ -1503,14 +1504,14 @@ ith ROC curves,
  []
 
 
-
-[10.10]
 Overfull \hbox (6.10783pt too wide) in paragraph at lines 775--776
 []\T1/LinuxLibertineT-TLF/m/n/10 (-20) Multi-scale slid-ing win-dow de-tec-tor 
 with non-maximum
  []
 
-Processing 'acks' comment.
+
+
+[10.10] Processing 'acks' comment.
 \openout3 = `comment.cut'.
 
  Comment 'acks' writing to comment.cut.
@@ -1539,13 +1540,17 @@ File: se-utf8.def 2019/11/29 v1.12 stringenc: UTF-8
 LaTeX2e <2024-11-01> patch level 2
 L3 programming layer <2025-01-18>
  ***********
+
+
+LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
+
 Package rerunfilecheck Info: File `main.out' has not changed.
 (rerunfilecheck)             Checksum: 307B29E3A3B4BAA2F5FF083F2B5AB3D3;6098.
  ) 
 Here is how much of TeX's memory you used:
  21782 strings out of 473190
  353381 string characters out of 5715800
- 831486 words of memory out of 5000000
+ 828799 words of memory out of 5000000
  43914 multiletter control sequences out of 15000+600000
  704018 words of font info for 368 fonts, out of 8000000 for 9000
  1302 hyphenation exceptions out of 8191
@@ -1565,7 +1570,7 @@ ype1/public/newtx/txexs.pfb></usr/local/texlive/2025/texmf-dist/fonts/type1/pub
 lic/newtx/txmiaX.pfb></usr/local/texlive/2025/texmf-dist/fonts/type1/public/new
 tx/txsym.pfb></usr/local/texlive/2025/texmf-dist/fonts/type1/public/newtx/txsys
 .pfb>
-Output written on main.pdf (11 pages, 2764969 bytes).
+Output written on main.pdf (11 pages, 2763604 bytes).
 PDF statistics:
  519 PDF objects out of 1000 (max. 8388607)
  449 compressed objects within 5 object streams
