@@ -19,7 +19,7 @@
 - You'll have to submit the code and a report following the ACM format. Your code repository and reported results should be reproducible. You'll have to attach a README file which should have instructions to run the code.
 
 - Both report and code has to be zipped inside a zip file. The zip file should be named as per the following scheme:  
-  `<2022EE11436>-<2022EE12045>_<NAKSHAT PANDEY>-<SUSHANT KUMAR>`
+  `<2022EE11436>-<NAKSHAT PANDEY>`
 
 - Python is recommended language for implementation. You are free to utilize any open source package/library of your choice.
 
@@ -30,6 +30,15 @@
 - We shall run moss for plagiarism check. Based upon the amount of plagiarism adequate penalty will be applied.
 
 - **Grading will entirely be on how much efforts you have put in. We will keep correctness secondary.**
+
+---
+
+## Report Guide
+
+For the report, follow the ACM format as specified. Refer to `ACM_guide.md` for detailed instructions on using the ACM LaTeX class.
+
+**Known Issues:**
+- Overfull hbox warnings: These occur when text is too wide for the line. To fix, you can break long lines, use smaller fonts like `\footnotesize` for code or paths, or adjust spacing. Document any such issues in your report.
 
 ---
 

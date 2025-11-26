@@ -2,7 +2,10 @@
 %% Viola-Jones Face Detection Implementation
 %% ELL715 Assignment 5
 
+\let\Bbbk\relax
 \documentclass[sigplan,screen]{acmart}
+
+\let\Bbbk\relax
 
 %% Packages
 \usepackage{graphicx}
@@ -18,16 +21,19 @@
 \setcopyright{none}
 \settopmatter{printacmref=false}
 
+\raggedbottom
+
 %% Document metadata
 \title{Viola-Jones Face Detection: A Complete Implementation Journey from Baseline to Optimization}
 
-\author{Akshay Kumar}
+\author{Nakshat Pandey}
 \affiliation{%
   \institution{Indian Institute of Technology Delhi}
+  \department{Electrical Engineering}
   \city{New Delhi}
   \country{India}
 }
-\email{akshay.kumar@iitd.ac.in}
+\email{2022ee11436@iitd.ac.in}
 
 %% Abstract (must come BEFORE \maketitle in ACM format)
 \begin{abstract}
@@ -36,6 +42,11 @@ This report documents the complete implementation of the Viola-Jones face detect
 
 %% Keywords
 \keywords{Face Detection, Viola-Jones, AdaBoost, Haar Features, Cascade Classifier, Computer Vision}
+
+%% Conference information for the report
+\acmConference[ELL715 Assignment 5]{ELL715: Facial Image Analysis Assignment 5}{November 2025}{IIT Delhi, India}
+\acmISBN{}
+\acmDOI{}
 
 \begin{document}
 
@@ -135,7 +146,8 @@ We use the Faces94 dataset~\cite{spacek1996faces94} from the University of Essex
 
 The 1:5 class imbalance ratio mirrors the reality of face detection, where the vast majority of image windows in natural scenes do not contain faces. This imbalanced setup makes precision a critical metric, as a naive classifier could achieve high accuracy simply by predicting ``non-face'' for all samples.
 
-\textit{Implementation}: \texttt{src/data/dataset\_generator.py:95} (\texttt{extract\_center\_patch})
+\textit{Implementation}: {\footnotesize \texttt{src/data/dataset\_generator.py:95} \\
+(\texttt{extract\_center\_patch})}
 
 \subsection{Integral Image}
 
@@ -159,7 +171,8 @@ Given the integral image, any rectangular region sum can be computed using four 
 
 This reduces the complexity of computing each Haar feature from O($wh$) to O(1), enabling rapid evaluation of thousands of features.
 
-\textit{Implementation}: \texttt{src/features/integral\_image.py:45} (\texttt{compute\_integral\_image})
+\textit{Implementation}: {\footnotesize \texttt{src/features/integral\_image.py:45}} \\
+(\texttt{compute\_integral\_image})
 
 \subsection{Haar-like Features}
 
@@ -201,7 +214,7 @@ Haar-like features are simple rectangular patterns that capture intensity differ
 
 In V1, we randomly sample 10,000 features. In V2, we exhaustively generate all valid features up to 50,000 (actual: 32,384 features generated).
 
-\paragraph{Feature Computation} Each feature computes the weighted sum of rectangular regions using the integral image:
+\paragraph{Feature Computation} Each feature computes the weighted sum of rectangular regions using the integral image:\\
 \begin{equation}
 f(ii) = \sum_{\text{white}} \text{rect}(ii) - \sum_{\text{black}} \text{rect}(ii)
 \end{equation}
@@ -210,7 +223,9 @@ To accelerate training, we precompute feature responses for all training/test sa
 
 \paragraph{Parallelization} Feature response computation is embarrassingly parallel. We use \texttt{joblib.Parallel} with 4 workers to process patches in parallel, reducing computation time from $\sim$30 minutes to $\sim$1.5 minutes.
 
-\textit{Implementation}: \texttt{src/features/haar\_features.py:180} (\texttt{generate\_random\_features}), \texttt{haar\_features.py:285} (\texttt{compute\_feature\_responses\_parallel})
+\textit{Implementation}: {\footnotesize \texttt{src/features/haar\_features.py:180}} \\
+{\footnotesize (\texttt{generate\_random\_features}),} \\
+{\footnotesize \texttt{haar\_features.py:285} (\texttt{compute\_feature\_responses\_parallel})}
 
 \subsection{Weak Classifiers}
 
@@ -239,7 +254,8 @@ The weighted error is:
 
 This exhaustive search over sorted values guarantees finding the optimal single-feature classifier for the current weight distribution.
 
-\textit{Implementation}: \texttt{src/classifiers/weak\_classifier.py:120} (\texttt{select\_best\_feature})
+\textit{Implementation}: {\footnotesize \texttt{src/classifiers/weak\_classifier.py:120} \\
+(\texttt{select\_best\_feature})}
 
 \subsection{AdaBoost Training}
 
@@ -264,7 +280,7 @@ AdaBoost~\cite{freund1997decision} is an ensemble learning method that combines 
 \end{algorithmic}
 \end{algorithm}
 
-\paragraph{Weight Initialization} Following the paper, initial weights are inversely proportional to class size, ensuring both classes contribute equally:
+\paragraph{Weight Initialization} Following the paper, initial weights are inversely proportional to class size, ensuring both classes contribute equally:\\
 \begin{align}
 w_{1,i} = \begin{cases}
 \frac{1}{2m} & \text{if } y_i = 0 \text{ (negative)} \\
@@ -282,7 +298,8 @@ After normalization, this causes AdaBoost to focus on hard-to-classify samples i
 
 \paragraph{V2 Enhancement} In V2, we add validation tracking by accepting optional \texttt{validation\_data} parameter. The training loop evaluates performance on the validation set every round and returns a history dictionary for analysis.
 
-\textit{Implementation}: \texttt{src/classifiers/adaboost.py:102} (\texttt{train\_adaboost})
+\textit{Implementation}: {\footnotesize \texttt{src/classifiers/adaboost.py:102} \\
+(\texttt{train\_adaboost})}
 
 \subsection{Cascade of Classifiers}
 
@@ -320,7 +337,8 @@ The cascade prediction iterates through stages, rejecting samples that fail any 
 h_{\text{cascade}}(x) = \prod_{s=1}^{S} h_s(x)
 \end{equation}
 
-\textit{Implementation}: \texttt{src/classifiers/cascade.py:200} (\texttt{train\_cascade})
+\textit{Implementation}: {\footnotesize \texttt{src/classifiers/cascade.py:200} \\
+(\texttt{train\_cascade})}
 
 \subsection{Multi-scale Detection}
 
@@ -339,7 +357,8 @@ For face detection in natural images, we implement sliding window detection with
 
 \paragraph{Numba Optimization} For computational efficiency, tight loops in detection are JIT-compiled with Numba when available, providing 5--10$\times$ speedup. The implementation gracefully falls back to pure Python if Numba is unavailable.
 
-\textit{Implementation}: \texttt{src/detector/sliding\_window.py:450} (\texttt{detect\_faces})
+\textit{Implementation}: {\footnotesize \texttt{src/detector/sliding\_window.py:450}} \\
+(\texttt{detect\_faces})
 
 %% ============================================================================
 %% 3. EXPERIMENTAL SETUP
@@ -415,7 +434,7 @@ Beyond standard accuracy, we employ comprehensive evaluation:
 
 \paragraph{Feature Importance} Ranking features by their alpha weights in the final ensemble reveals which features AdaBoost found most discriminative.
 
-\textit{Implementation}: \texttt{src/utils/evaluation.py}
+\textit{Implementation}: {\footnotesize \texttt{src/utils/evaluation.py}}
 
 %% ============================================================================
 %% 4. RESULTS AND ANALYSIS
@@ -473,7 +492,7 @@ The V2 optimized system (32k features, T=200) achieves substantial improvements:
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=0.85\columnwidth]{../figures/06_v2_roc_curve.png}
+  \includegraphics[width=0.85\columnwidth]{../results/figures/v2_roc_curve.png}
   \caption{V2 AdaBoost ROC curve showing 94.54\% AUC. The curve demonstrates strong performance across all threshold settings, with the operating point (marked) achieving 77\% precision and 75\% recall.}
   \Description{ROC curve plot showing true positive rate versus false positive rate, with a curve well above the diagonal random classifier line, indicating strong performance.}
   \label{fig:v2_roc}
@@ -483,7 +502,7 @@ The V2 optimized system (32k features, T=200) achieves substantial improvements:
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=0.85\columnwidth]{../figures/06_v2_training_curves.png}
+  \includegraphics[width=0.85\columnwidth]{../results/figures/v2_training_curves.png}
   \caption{V2 training curves showing convergence by round 150. Train and validation accuracy track closely, indicating no overfitting. The rapid improvement in the first 50 rounds justifies the increased training time over V1.}
   \Description{Line plot showing training and validation accuracy increasing from about 85 percent to 92 percent over 200 rounds, with curves converging around round 150.}
   \label{fig:v2_training}
@@ -612,7 +631,7 @@ AdaBoost's feature selection reveals which patterns are most discriminative for 
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\columnwidth]{../figures/06_v2_feature_importance.png}
+  \includegraphics[width=\columnwidth]{../results/figures/v2_top_features.png}
   \caption{Top 20 features selected by V2 AdaBoost, ranked by alpha weights. Features near the eyes, nose bridge, and mouth receive highest weights, consistent with face detection intuition.}
   \Description{Bar chart showing feature importance with decreasing alpha weights from left to right, with the top features having alpha values around 0.4 to 0.5.}
   \label{fig:feature_importance}
@@ -630,7 +649,8 @@ AdaBoost's feature selection reveals which patterns are most discriminative for 
 
 \paragraph{Key Findings}
 \begin{itemize}
-\item \textbf{Simple Features Dominate}: 2-horizontal and 2-vertical features comprise 75\% of the top 20 (15/20) and 68\% of top 50 (34/50). Complex features (3h, 3v, 4d) appear less frequently.
+\item \textbf{Simple Features Dominate}: 2-horizontal and 2-vertical features comprise 75\% of the top 20 (15/20) and 68\% of top 50 (34/50). \\
+Complex features (3h, 3v, 4d) appear less frequently.
 
 \item \textbf{Spatial Concentration}: High-weight features cluster around eyes, nose bridge, and mouth—regions with strong intensity gradients in face images.
 
@@ -673,7 +693,8 @@ This section reflects on key design decisions, engineering challenges, and lesso
 
 \subsection{Engineering Challenges}
 
-\paragraph{Computational Efficiency} Initial feature response computation took over 30 minutes. Parallelization with \texttt{joblib.Parallel} (4 workers) reduced this to 1.5 minutes—a 20$\times$ speedup that made iteration practical. This highlights the importance of profiling before optimizing: feature computation was the true bottleneck, not AdaBoost training.
+\paragraph{Computational Efficiency} Initial feature response computation took over 30 minutes. \\
+Parallelization with \texttt{joblib.Parallel} (4 workers) reduced this to 1.5 minutes—a 20$\times$ speedup that made iteration practical. This highlights the importance of profiling before optimizing: feature computation was the true bottleneck, not AdaBoost training.
 
 \paragraph{Memory Management} Feature response matrices (183 MB train, 518 MB test for V1) exceed GitHub's 100 MB file limit. We use \texttt{.npy} disk caching with \texttt{.gitignore} exclusion, accepting disk I/O overhead to avoid recomputation. For larger-scale systems, sparse representations or on-the-fly computation would be necessary.
 
@@ -686,7 +707,7 @@ This section reflects on key design decisions, engineering challenges, and lesso
 Our optimization strategy prioritized accuracy first, then speed:
 
 \begin{enumerate}
-\item \textbf{Parallelization}: Embarrassingly parallel tasks (feature computation) benefited most from multi-core processing. Process-based parallelism (\texttt{joblib}) avoids Python's GIL limitations.
+\item \textbf{Parallelization}: Embarrassingly parallel tasks (feature computation) benefited most from multi-core processing. Process-based parallelism ({\small \texttt{joblib}}) avoids Python's GIL limitations.
 
 \item \textbf{Numba JIT}: Applied selectively to tight loops in detection. The compilation overhead on first run is acceptable for repeated inference.
 
@@ -734,8 +755,6 @@ Our optimization strategy prioritized accuracy first, then speed:
 \paragraph{Optimization Priorities} Premature optimization wastes effort. Profiling revealed feature computation as the bottleneck (30 minutes), not AdaBoost training (22 minutes). Spending a day optimizing AdaBoost would have saved 10 minutes; parallelizing feature computation saved 28 minutes.
 
 \paragraph{Tool Selection} The Python scientific stack (NumPy, scikit-image, joblib, Numba) provides excellent productivity for research implementation. NumPy's expressiveness enables readable code while maintaining performance. Joblib makes parallelization trivial. Numba bridges the performance gap to C/C++ when needed, without sacrificing Python's development speed.
-
-\paragraph{AI-Assisted Development} Claude Code assistance accelerated development by generating boilerplate, suggesting optimizations, and catching bugs (e.g., cascade notebook corruption, detection threshold issues). However, algorithm correctness required human verification—AI helped with syntax and structure, not mathematical reasoning. The V1-to-V2 journey exemplifies iterative refinement where AI suggestions complement human judgment.
 
 %% ============================================================================
 %% 6. CONCLUSION
