@@ -1,0 +1,162 @@
+\relax 
+\providecommand\hyper@newdestlabel[2]{}
+\providecommand\HyField@AuxAddToFields[1]{}
+\providecommand\HyField@AuxAddToCoFields[2]{}
+\citation{viola2001rapid}
+\@writefile{toc}{\contentsline {section}{Abstract}{1}{section*.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {1}Introduction}{1}{section.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.1}Background and Motivation}{1}{subsection.1.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.2}Algorithm Overview}{1}{subsection.1.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Integral Image}{1}{section*.4}\protected@file@percent }
+\newlabel{eq:integral_image}{{1}{1}{Integral Image}{equation.1}{}}
+\@writefile{toc}{\contentsline {paragraph}{Haar-like Features}{1}{section*.5}\protected@file@percent }
+\citation{spacek1996faces94}
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Viola-Jones face detection pipeline showing the complete workflow from input image to final detections. The implementation includes both AdaBoost and cascade variants for comparison.}}{2}{figure.caption.8}\protected@file@percent }
+\providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
+\newlabel{fig:pipeline}{{1}{2}{Viola-Jones face detection pipeline showing the complete workflow from input image to final detections. The implementation includes both AdaBoost and cascade variants for comparison}{figure.caption.8}{}}
+\@writefile{toc}{\contentsline {paragraph}{AdaBoost Training}{2}{section*.6}\protected@file@percent }
+\newlabel{eq:strong_classifier}{{3}{2}{AdaBoost Training}{equation.3}{}}
+\@writefile{toc}{\contentsline {paragraph}{Cascade of Classifiers}{2}{section*.7}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.3}Implementation Objectives}{2}{subsection.1.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.4}Report Organization}{2}{subsection.1.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {2}Methods and Implementation}{2}{section.2}\protected@file@percent }
+\newlabel{sec:methods}{{2}{2}{Methods and Implementation}{section.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.1}Dataset Preparation}{2}{subsection.2.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Patch Extraction Strategy}{2}{section*.9}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Dataset Statistics}{2}{section*.10}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.2}Integral Image}{2}{subsection.2.2}\protected@file@percent }
+\citation{lienhart2002extended}
+\citation{freund1997decision}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces The five Haar-like feature types implemented: 2-horizontal (vertical edge), 2-vertical (horizontal edge), 3-horizontal (vertical line), 3-vertical (horizontal line), and 4-diagonal (diagonal patterns). White regions have positive weights, black regions negative weights.}}{3}{figure.caption.11}\protected@file@percent }
+\newlabel{fig:haar_types}{{2}{3}{The five Haar-like feature types implemented: 2-horizontal (vertical edge), 2-vertical (horizontal edge), 3-horizontal (vertical line), 3-vertical (horizontal line), and 4-diagonal (diagonal patterns). White regions have positive weights, black regions negative weights}{figure.caption.11}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Haar-like feature types and their characteristics}}{3}{table.caption.13}\protected@file@percent }
+\newlabel{tab:haar_types}{{1}{3}{Haar-like feature types and their characteristics}{table.caption.13}{}}
+\newlabel{eq:rectangle_sum}{{7}{3}{Integral Image}{equation.7}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.3}Haar-like Features}{3}{subsection.2.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Feature Types}{3}{section*.12}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Feature Generation}{3}{section*.14}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Feature Computation}{3}{section*.15}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Parallelization}{3}{section*.16}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.4}Weak Classifiers}{3}{subsection.2.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Training}{3}{section*.17}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.5}AdaBoost Training}{3}{subsection.2.5}\protected@file@percent }
+\@writefile{loa}{\contentsline {algorithm}{\numberline {1}{\ignorespaces AdaBoost Training (Viola-Jones)}}{4}{algorithm.1}\protected@file@percent }
+\newlabel{alg:adaboost}{{1}{4}{AdaBoost Training (Viola-Jones)}{algorithm.1}{}}
+\@writefile{toc}{\contentsline {paragraph}{Weight Initialization}{4}{section*.18}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Weight Update Rule}{4}{section*.19}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{V2 Enhancement}{4}{section*.20}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.6}Cascade of Classifiers}{4}{subsection.2.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Stage Configuration}{4}{section*.21}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Threshold Adjustment}{4}{section*.23}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces V2 Cascade stage configuration}}{4}{table.caption.22}\protected@file@percent }
+\newlabel{tab:cascade_config}{{2}{4}{V2 Cascade stage configuration}{table.caption.22}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.7}Multi-scale Detection}{4}{subsection.2.7}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Sliding Window}{4}{section*.24}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Image Pyramid}{4}{section*.25}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Non-Maximum Suppression (NMS)}{4}{section*.26}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Numba Optimization}{4}{section*.27}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3}Experimental Setup}{4}{section.3}\protected@file@percent }
+\newlabel{sec:experimental}{{3}{4}{Experimental Setup}{section.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}Implementation Details}{5}{subsection.3.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Software Stack}{5}{section*.28}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Hardware}{5}{section*.29}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Optimization Techniques}{5}{section*.30}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}V1 Baseline Configuration}{5}{subsection.3.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3}V2 Optimization Strategy}{5}{subsection.3.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Increased Feature Pool}{5}{section*.31}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Extended Training}{5}{section*.32}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Refined Cascade}{5}{section*.33}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Validation Tracking}{5}{section*.34}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Parallelized Feature Computation}{5}{section*.35}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.4}Evaluation Metrics}{5}{subsection.3.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Classification Metrics}{5}{section*.36}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{ROC Analysis}{5}{section*.37}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Precision-Recall Curves}{5}{section*.38}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Training Curves}{5}{section*.39}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Feature Importance}{5}{section*.40}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4}Results and Analysis}{5}{section.4}\protected@file@percent }
+\newlabel{sec:results}{{4}{5}{Results and Analysis}{section.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}V1 Baseline Performance}{5}{subsection.4.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Confusion Matrix}{5}{section*.41}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Analysis}{5}{section*.42}\protected@file@percent }
+\citation{viola2001rapid}
+\citation{viola2001rapid}
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces V2 AdaBoost ROC curve showing 94.54\% AUC. The curve demonstrates strong performance across all threshold settings, with the operating point (marked) achieving 77\% precision and 75\% recall.}}{6}{figure.caption.45}\protected@file@percent }
+\newlabel{fig:v2_roc}{{3}{6}{V2 AdaBoost ROC curve showing 94.54\% AUC. The curve demonstrates strong performance across all threshold settings, with the operating point (marked) achieving 77\% precision and 75\% recall}{figure.caption.45}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}V2 AdaBoost Performance}{6}{subsection.4.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Confusion Matrix}{6}{section*.43}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{ROC Analysis}{6}{section*.44}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Training Curves}{6}{section*.46}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.3}Cascade Classifier Analysis}{6}{subsection.4.3}\protected@file@percent }
+\newlabel{sec:cascade_analysis}{{4.3}{6}{Cascade Classifier Analysis}{subsection.4.3}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces V2 training curves showing convergence by round 150. Train and validation accuracy track closely, indicating no overfitting. The rapid improvement in the first 50 rounds justifies the increased training time over V1.}}{6}{figure.caption.47}\protected@file@percent }
+\newlabel{fig:v2_training}{{4}{6}{V2 training curves showing convergence by round 150. Train and validation accuracy track closely, indicating no overfitting. The rapid improvement in the first 50 rounds justifies the increased training time over V1}{figure.caption.47}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces V2 Cascade progressive filtering on test negatives}}{6}{table.caption.50}\protected@file@percent }
+\newlabel{tab:cascade_filtering}{{3}{6}{V2 Cascade progressive filtering on test negatives}{table.caption.50}{}}
+\@writefile{toc}{\contentsline {paragraph}{Key Finding}{6}{section*.48}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Progressive Filtering}{6}{section*.49}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Why Cascade Underperforms}{6}{section*.51}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces ROC comparison: V2 AdaBoost vs V2 Cascade. AdaBoost achieves higher AUC (94.54\% vs 91.46\%) and better precision-recall balance. The cascade's conservative threshold settings to maintain high TPR result in more false positives.}}{7}{figure.caption.53}\protected@file@percent }
+\newlabel{fig:cascade_roc}{{5}{7}{ROC comparison: V2 AdaBoost vs V2 Cascade. AdaBoost achieves higher AUC (94.54\% vs 91.46\%) and better precision-recall balance. The cascade's conservative threshold settings to maintain high TPR result in more false positives}{figure.caption.53}{}}
+\@writefile{toc}{\contentsline {paragraph}{Interpretation}{7}{section*.52}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.4}V1 vs V2 Comparison}{7}{subsection.4.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Key Insights}{7}{section*.56}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces V1 vs V2 metrics comparison showing significant improvements in precision (+23.66\%), accuracy (+7.14\%), and F1-score (+7.22\%). The recall decrease is a deliberate trade-off for fewer false positives.}}{7}{figure.caption.55}\protected@file@percent }
+\newlabel{fig:v1_v2_metrics}{{6}{7}{V1 vs V2 metrics comparison showing significant improvements in precision (+23.66\%), accuracy (+7.14\%), and F1-score (+7.22\%). The recall decrease is a deliberate trade-off for fewer false positives}{figure.caption.55}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces ROC curve evolution from V1 to V2. V1 achieves high recall but poor precision (upper right operating point). V2 shifts to balanced precision-recall (middle operating point) with higher overall AUC.}}{7}{figure.caption.57}\protected@file@percent }
+\newlabel{fig:v1_v2_roc}{{7}{7}{ROC curve evolution from V1 to V2. V1 achieves high recall but poor precision (upper right operating point). V2 shifts to balanced precision-recall (middle operating point) with higher overall AUC}{figure.caption.57}{}}
+\citation{viola2001rapid}
+\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces V1 vs V2 performance comparison (AdaBoost)}}{8}{table.caption.54}\protected@file@percent }
+\newlabel{tab:v1_v2}{{4}{8}{V1 vs V2 performance comparison (AdaBoost)}{table.caption.54}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {8}{\ignorespaces Top 20 features selected by V2 AdaBoost, ranked by alpha weights. Features near the eyes, nose bridge, and mouth receive highest weights, consistent with face detection intuition.}}{8}{figure.caption.58}\protected@file@percent }
+\newlabel{fig:feature_importance}{{8}{8}{Top 20 features selected by V2 AdaBoost, ranked by alpha weights. Features near the eyes, nose bridge, and mouth receive highest weights, consistent with face detection intuition}{figure.caption.58}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.5}Feature Importance Analysis}{8}{subsection.4.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Feature Type Distribution}{8}{section*.59}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Key Findings}{8}{section*.61}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {9}{\ignorespaces Feature type distribution in top 20 and top 50 features. Simple edge detectors (2-horizontal, 2-vertical) dominate, comprising 75\% of top 20 features. This matches the Viola-Jones paper's finding that simple features are most discriminative.}}{8}{figure.caption.60}\protected@file@percent }
+\newlabel{fig:feature_dist}{{9}{8}{Feature type distribution in top 20 and top 50 features. Simple edge detectors (2-horizontal, 2-vertical) dominate, comprising 75\% of top 20 features. This matches the Viola-Jones paper's finding that simple features are most discriminative}{figure.caption.60}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.6}Detection Examples}{8}{subsection.4.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {5}Discussion}{8}{section.5}\protected@file@percent }
+\newlabel{sec:discussion}{{5}{8}{Discussion}{section.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}Key Design Decisions}{8}{subsection.5.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Class Imbalance (1:5 Ratio)}{8}{section*.63}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {10}{\ignorespaces Multi-scale face detection examples using V2 AdaBoost with sliding window (16$\times $16, step=2px, scale=1.2, threshold=0.6). Green boxes show detections with confidence scores after non-maximum suppression.}}{9}{figure.caption.62}\protected@file@percent }
+\newlabel{fig:detection_examples}{{10}{9}{Multi-scale face detection examples using V2 AdaBoost with sliding window (16$\times $16, step=2px, scale=1.2, threshold=0.6). Green boxes show detections with confidence scores after non-maximum suppression}{figure.caption.62}{}}
+\@writefile{toc}{\contentsline {paragraph}{Feature Count Scaling (10k $\to $ 32k)}{9}{section*.64}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{AdaBoost Rounds (T=50 $\to $ T=200)}{9}{section*.65}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{AdaBoost over Cascade for Detection}{9}{section*.66}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.2}Engineering Challenges}{9}{subsection.5.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Computational Efficiency}{9}{section*.67}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Memory Management}{9}{section*.68}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Cascade Threshold Tuning}{9}{section*.69}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Detection Performance}{9}{section*.70}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.3}Performance Optimizations}{9}{subsection.5.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.4}Limitations and Future Work}{10}{subsection.5.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Current Limitations}{10}{section*.71}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Future Enhancements}{10}{section*.72}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.5}Lessons Learned}{10}{subsection.5.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Implementation vs Theory Gap}{10}{section*.73}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Evaluation Importance}{10}{section*.74}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Optimization Priorities}{10}{section*.75}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Tool Selection}{10}{section*.76}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {6}Conclusion}{10}{section.6}\protected@file@percent }
+\newlabel{sec:conclusion}{{6}{10}{Conclusion}{section.6}{}}
+\citation{viola2001rapid}
+\citation{spacek1996faces94}
+\bibstyle{ACM-Reference-Format}
+\bibcite{viola2001rapid}{{1}{}{{}}{{}}}
+\bibcite{freund1997decision}{{2}{}{{}}{{}}}
+\bibcite{spacek1996faces94}{{3}{}{{}}{{}}}
+\bibcite{lienhart2002extended}{{4}{}{{}}{{}}}
+\newlabel{tocindent-1}{0pt}
+\newlabel{tocindent0}{0pt}
+\newlabel{tocindent1}{4.65pt}
+\newlabel{tocindent2}{11.49998pt}
+\newlabel{tocindent3}{0pt}
+\newlabel{tocindent4}{0pt}
+\newlabel{tocindent5}{0pt}
+\providecommand\NAT@force@numbers{}\NAT@force@numbers
+\@writefile{toc}{\contentsline {section}{Acknowledgments}{11}{section*.78}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{References}{11}{section*.80}\protected@file@percent }
+\newlabel{TotPages}{{11}{11}{}{page.11}{}}
+\gdef \@abspage@last{11}

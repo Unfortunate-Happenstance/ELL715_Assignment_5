@@ -1,0 +1,5 @@
+This implementation was developed with assistance from Claude Code (Anthropic), an AI-powered coding assistant. Claude Code was used for generating boilerplate code structures, debugging implementation issues (cascade notebook corruption, detection threshold bugs), code review and optimization suggestions, and documentation and report planning.
+
+All algorithm design decisions, experimental analysis, and critical implementation logic were performed by the author. The core AdaBoost and cascade training algorithms were implemented following the Viola-Jones paper specifications~\cite{viola2001rapid} without external machine learning libraries.
+
+The Faces94 dataset is courtesy of Libor Spacek at the University of Essex~\cite{spacek1996faces94}.
